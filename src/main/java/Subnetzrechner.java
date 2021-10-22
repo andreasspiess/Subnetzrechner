@@ -10,8 +10,10 @@ public class Subnetzrechner {
     public static void main(String[] args) {
         List<Integer> ipAddress = askForIpOrSubNetMask("IP address! ");
         System.out.println("Deine eingegebene IP ist:" + ipAddress);
-
         List<Integer> subnetMask = askForIpOrSubNetMask("subnet mask! ");
+        while (!checkSubnetMask(subnetMask)) {
+            subnetMask = askForIpOrSubNetMask("subnet mask! ");
+        }
         System.out.println("Deine eingegebene Subnet Maske ist:" + subnetMask);
     }
 
@@ -36,7 +38,6 @@ public class Subnetzrechner {
         // Erneute Eingabe
         if (!checkFormat(ipOrSubNetMask)) {
             return askForIpOrSubNetMask(input);
-
         }
         String[] splitAddresses = ipOrSubNetMask.split("\\.");
         List<String> splitNumbers = Arrays.asList(splitAddresses);
@@ -100,6 +101,7 @@ public class Subnetzrechner {
         if (toBinary.size() != 4) {
             throw new IllegalArgumentException("illegal format!");
         }
+        String resultFinalBinary = "";
         for (int i = 0; i < toBinary.size(); i++) {
             if (toBinary.get(i) < 0 || toBinary.get(i) > 255) {
                 throw new IllegalArgumentException("illegal numbers!");
@@ -108,18 +110,24 @@ public class Subnetzrechner {
                 while (binaryFormat.length() < 8) {
                     binaryFormat = "0" + binaryFormat;
                 }
-                binaryFormat+;
+                resultFinalBinary = resultFinalBinary + binaryFormat;
             }
         }
-
-        return "";
+        return resultFinalBinary;
     }
 
     public static boolean checkSubnetMask(List<Integer> subnetMask) {
+        boolean result = true;
         if (subnetMask.size() != 4) {
-            throw new IllegalArgumentException("invalid subnet mask format");
+            throw new IllegalArgumentException("Invalid subnet mask format.");
+        } else {
+            String checkIfCorrectSubnetMask = ipOrSubnetMaskToBinary(subnetMask);
+            if (checkIfCorrectSubnetMask.contains("01")) {
+                System.out.println("Invalid subnet mask format.");
+                result = false;
+            }
         }
-        return true;
+        return result;
     }
 }
 
