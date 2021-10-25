@@ -1,4 +1,3 @@
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -114,5 +113,15 @@ public class SubnetzrechnerTests {
             // should fail
             assertTrue(true);
         }
+    }
+
+    @Test
+    public void testID() {
+        List<Integer> inputIP = List.of(192, 168, 0, 1);
+        List<Integer> inputSNM = List.of(255, 255, 255, 0);
+        String expectedNetID = "192.168.0.0";
+        String netIDBinary = Subnetzrechner.calculatingNetIDBinary(Subnetzrechner.ipOrSubnetMaskToBinary(inputIP), Subnetzrechner.ipOrSubnetMaskToBinary(inputSNM));
+        String actualNetID = Subnetzrechner.binaryToDecimal(Subnetzrechner.convertBinaryStringToIntegerList(netIDBinary));
+        assertEquals(expectedNetID, actualNetID);
     }
 }
