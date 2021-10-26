@@ -96,18 +96,18 @@ public class SubnetzrechnerTests {
         assertFalse(Subnetzrechner.checkSubnetMask((List.of(180, 0, 5, 3))));
         assertFalse(Subnetzrechner.checkSubnetMask((List.of(255, 0, 5, 3))));
         assertFalse(Subnetzrechner.checkSubnetMask((List.of(192, 0, 255, 255))));
-        assertFalse(Subnetzrechner.checkSubnetMask((List.of(255, 0, 0 , 1))));
+        assertFalse(Subnetzrechner.checkSubnetMask((List.of(255, 0, 0, 1))));
     }
 
     @Test
     public void testIpToBinary() {
-        assertEquals("11111111111111111111111111100000", Subnetzrechner.ipOrSubnetMaskToBinary(List.of(255, 255, 255, 224)));
-        assertEquals("11111111100000000000000000000000", Subnetzrechner.ipOrSubnetMaskToBinary(List.of(255, 128, 0, 0)));
-        assertEquals("00000001000000010000000100000000", Subnetzrechner.ipOrSubnetMaskToBinary(List.of(1, 1, 1, 0)));
+        assertEquals("11111111111111111111111111100000", Subnetzrechner.convertIpOrSubnetMaskToBinary(List.of(255, 255, 255, 224)));
+        assertEquals("11111111100000000000000000000000", Subnetzrechner.convertIpOrSubnetMaskToBinary(List.of(255, 128, 0, 0)));
+        assertEquals("00000001000000010000000100000000", Subnetzrechner.convertIpOrSubnetMaskToBinary(List.of(1, 1, 1, 0)));
 
         try {
             //noinspection ResultOfMethodCallIgnored
-            Subnetzrechner.ipOrSubnetMaskToBinary(List.of(290, 1, 1, 0));
+            Subnetzrechner.convertIpOrSubnetMaskToBinary(List.of(290, 1, 1, 0));
             fail("invalid ip should not be converted");
         } catch (IllegalArgumentException e) {
             // should fail
@@ -120,8 +120,25 @@ public class SubnetzrechnerTests {
         List<Integer> inputIP = List.of(192, 168, 0, 1);
         List<Integer> inputSNM = List.of(255, 255, 255, 0);
         String expectedNetID = "192.168.0.0";
-        String netIDBinary = Subnetzrechner.calculatingNetIDBinary(Subnetzrechner.ipOrSubnetMaskToBinary(inputIP), Subnetzrechner.ipOrSubnetMaskToBinary(inputSNM));
-        String actualNetID = Subnetzrechner.binaryToDecimal(Subnetzrechner.convertBinaryStringToIntegerList(netIDBinary));
+        String netIDBinary = Subnetzrechner.calculatingBinaryNetID(Subnetzrechner.convertIpOrSubnetMaskToBinary(inputIP), Subnetzrechner.convertIpOrSubnetMaskToBinary(inputSNM));
+        String actualNetID = Subnetzrechner.convertBinaryAddressToDecimalAddress(Subnetzrechner.convertBinaryStringToIntegerList(netIDBinary));
         assertEquals(expectedNetID, actualNetID);
+    }
+
+    @Test
+    public void testBroadcastAddress() {
+        String inputID = Subnetzrechner.convertIpOrSubnetMaskToBinary(List.of(192, 168, 0, 0));
+        String inputSmn = Subnetzrechner.convertIpOrSubnetMaskToBinary(List.of(255, 255, 255, 0));
+        String expected = Subnetzrechner.convertIpOrSubnetMaskToBinary(List.of(192, 168, 0, 255));
+        assertEquals(expected, Subnetzrechner.calculatingBroadcastBinary(inputSmn, inputID));
+    }
+
+    @Test
+    public void possibleNumberOfHosts() {
+        assertEquals(254, Subnetzrechner.calculatingAmountOfHosts("11111111111111111111111100000000"));
+        assertEquals(510, Subnetzrechner.calculatingAmountOfHosts("11111111111111111111111000000000"));
+        assertEquals(1022, Subnetzrechner.calculatingAmountOfHosts("11111111111111111111110000000000"));
+        assertEquals(2046, Subnetzrechner.calculatingAmountOfHosts("11111111111111111111100000000000"));
+
     }
 }

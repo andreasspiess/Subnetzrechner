@@ -13,71 +13,16 @@ public class Subnetzrechner {
         while (!checkSubnetMask(subnetMask)) {
             subnetMask = askForIpOrSubNetMask("subnet mask! ");
         }
-        System.out.println(ipOrSubnetMaskToBinary(ipAddress) + " IP");
-        String binarySubnetMask = ipOrSubnetMaskToBinary(subnetMask);
+        System.out.println();
+        System.out.println(convertIpOrSubnetMaskToBinary(ipAddress) + " IP");
+        String binarySubnetMask = convertIpOrSubnetMaskToBinary(subnetMask);
         System.out.println(binarySubnetMask + " subnet mask");
         System.out.println("____________________________________________");
-        String binaryNetID = calculatingNetIDBinary(ipOrSubnetMaskToBinary(ipAddress), binarySubnetMask);
-        System.out.println(binaryNetID + " ID (\u2259 IP & subnet mask) --> " + binaryToDecimal(convertBinaryStringToIntegerList(binaryNetID)));
+        String binaryNetID = calculatingBinaryNetID(convertIpOrSubnetMaskToBinary(ipAddress), binarySubnetMask);
+        System.out.println(binaryNetID + " ID " + convertBinaryAddressToDecimalAddress(convertBinaryStringToIntegerList(binaryNetID)) + " --> \u2259 IP & subnet mask");
         String binaryBroadcast = calculatingBroadcastBinary(binarySubnetMask, binaryNetID);
-        System.out.println(calculatingBroadcastBinary(binarySubnetMask, binaryNetID) + "BC (Host-Anteil der ID auf 1) --> " + binaryToDecimal(convertBinaryStringToIntegerList(binaryBroadcast)));
-    }
-
-    public static String calculatingBroadcastBinary(String binarySubnetMask, String binaryNetID) {
-        String broadcast;
-        int counterOfZeros = 0;
-        if (binarySubnetMask.indexOf(0) == 1 && binarySubnetMask.indexOf(binarySubnetMask.length()) == 0 && binarySubnetMask.contains("01")) {
-            counterOfZeros = binarySubnetMask.lastIndexOf("0") - binarySubnetMask.indexOf("0") + 1;
-            String onesToReplaceHostSection = "";
-            for (int i = 1; i <= counterOfZeros; i++) {
-                onesToReplaceHostSection += onesToReplaceHostSection + "1";
-            }
-            broadcast = binaryNetID.substring(binaryNetID.indexOf(0), binaryNetID.length() - counterOfZeros) + onesToReplaceHostSection;
-        } else {
-            throw new IllegalArgumentException();
-        }
-        return broadcast;
-    }
-
-    public static String calculatingNetIDBinary(String ip, String subNetMask) {
-        StringBuilder netId = new StringBuilder();
-        for (int i = 0; i < 32; i++) {
-            if (ip.charAt(i) == subNetMask.charAt(i) && subNetMask.charAt(i) == '1') {
-                netId.append("1");
-            } else {
-                netId.append("0");
-            }
-        }
-        return netId.toString();
-    }
-
-    public static String binaryToDecimal(List<String> binaryComponents) {
-        List<Integer> decimalInteger = new ArrayList<>();
-        StringBuilder decimalStringDotsInclusive = new StringBuilder();
-        decimalInteger.add(Integer.parseInt(binaryComponents.get(0), 2));
-        decimalInteger.add(Integer.parseInt(binaryComponents.get(1), 2));
-        decimalInteger.add(Integer.parseInt(binaryComponents.get(2), 2));
-        decimalInteger.add(Integer.parseInt(binaryComponents.get(3), 2));
-        for (int i = 0; i < decimalInteger.size(); i++) {
-            decimalStringDotsInclusive.append(decimalInteger.get(i)).append(".");
-        }
-        decimalStringDotsInclusive = new StringBuilder(decimalStringDotsInclusive.substring(0, decimalStringDotsInclusive.lastIndexOf(".")));
-        return decimalStringDotsInclusive.toString();
-    }
-
-
-    public static List<Integer> convertStringListToIntegerList(List<String> splitNumbers) {
-        List<Integer> ipComponentsIntegerFormat = new ArrayList<>();
-        for (String indexOfSplitNumbers : splitNumbers) {
-            ipComponentsIntegerFormat.add(Integer.valueOf(indexOfSplitNumbers));
-        }
-        /* Elemente der String Liste (indexOfSplitNumbers) werden in Integer umgewandelt (Integer.valueOf)
-         & an gleichen Index in der neuen Integer Liste hinzugefügt (add).*/
-        return ipComponentsIntegerFormat;
-    }
-
-    private static boolean checkFormat(String input) {
-        return checkIpLength(input) && checkThreeDots(input);
+        System.out.println(calculatingBroadcastBinary(binarySubnetMask, binaryNetID) + " BC " + convertBinaryAddressToDecimalAddress(convertBinaryStringToIntegerList(binaryBroadcast)) + " --> Host-Anteil (\u2259 0er der Subnetzmaske) der ID auf 1");
+        System.out.println("Amount of possible hosts: " + calculatingAmountOfHosts(binarySubnetMask));
     }
 
     private static List<Integer> askForIpOrSubNetMask(String input) {
@@ -97,6 +42,10 @@ public class Subnetzrechner {
             return askForIpOrSubNetMask(input);
         }
         return convertStringListToIntegerList(splitNumbers);
+    }
+
+    private static boolean checkFormat(String input) {
+        return checkIpLength(input) && checkThreeDots(input);
     }
 
     public static boolean checkInputAreOnlyNumbers(List<String> ipComponentsStringFormat) {
@@ -145,8 +94,21 @@ public class Subnetzrechner {
         return result;
     }
 
-    //umwandeln in binär
-    public static String ipOrSubnetMaskToBinary(List<Integer> toBinary) {
+    public static boolean checkSubnetMask(List<Integer> subnetMask) {
+        boolean result = true;
+        if (subnetMask.size() != 4) {
+            throw new IllegalArgumentException("Invalid subnet mask format.");
+        } else {
+            String checkIfCorrectSubnetMask = convertIpOrSubnetMaskToBinary(subnetMask);
+            if (checkIfCorrectSubnetMask.contains("01")) {
+                System.out.println("Invalid subnet mask format.");
+                result = false;
+            }
+        }
+        return result;
+    }
+
+    public static String convertIpOrSubnetMaskToBinary(List<Integer> toBinary) {
         if (toBinary.size() != 4) {
             throw new IllegalArgumentException("illegal format!");
         }
@@ -163,8 +125,18 @@ public class Subnetzrechner {
             }
         }
         return resultFinalBinary;
-    }
+    } //Umwandeln in binär
 
+    public static List<Integer> convertStringListToIntegerList(List<String> splitNumbers) {
+        List<Integer> ipComponentsIntegerFormat = new ArrayList<>();
+        for (String indexOfSplitNumbers : splitNumbers) {
+            ipComponentsIntegerFormat.add(Integer.valueOf(indexOfSplitNumbers));
+        }
+        /* Elemente der String Liste (indexOfSplitNumbers) werden in Integer umgewandelt (Integer.valueOf)
+         & an gleichen Index in der neuen Integer Liste hinzugefügt (add).*/
+        return ipComponentsIntegerFormat;
+    }
+    
     public static List<String> convertBinaryStringToIntegerList(String binary) {
         List<String> binaryNumbers = new ArrayList<>();
         binaryNumbers.add(binary.substring(0, 8));
@@ -174,21 +146,58 @@ public class Subnetzrechner {
         return binaryNumbers;
     }
 
+    public static String convertBinaryAddressToDecimalAddress(List<String> binaryComponents) {
+        List<Integer> decimalInteger = new ArrayList<>();
+        StringBuilder decimalStringDotsInclusive = new StringBuilder();
+        decimalInteger.add(Integer.parseInt(binaryComponents.get(0), 2));
+        decimalInteger.add(Integer.parseInt(binaryComponents.get(1), 2));
+        decimalInteger.add(Integer.parseInt(binaryComponents.get(2), 2));
+        decimalInteger.add(Integer.parseInt(binaryComponents.get(3), 2));
+        for (int i = 0; i < decimalInteger.size(); i++) {
+            decimalStringDotsInclusive.append(decimalInteger.get(i)).append(".");
+        }
+        decimalStringDotsInclusive = new StringBuilder(decimalStringDotsInclusive.substring(0, decimalStringDotsInclusive.lastIndexOf(".")));
+        return decimalStringDotsInclusive.toString();
+    }
 
-    public static boolean checkSubnetMask(List<Integer> subnetMask) {
-        boolean result = true;
-        if (subnetMask.size() != 4) {
-            throw new IllegalArgumentException("Invalid subnet mask format.");
+    public static int countingZerosOfSubnetMask(String binarySubnetMask) {
+        int counterOfZeros = 0;
+        if (binarySubnetMask.startsWith("1") && binarySubnetMask.endsWith("0") && !binarySubnetMask.contains("01")) {
+            counterOfZeros = binarySubnetMask.lastIndexOf("0") - binarySubnetMask.indexOf("0") + 1;
         } else {
-            String checkIfCorrectSubnetMask = ipOrSubnetMaskToBinary(subnetMask);
-            if (checkIfCorrectSubnetMask.contains("01")) {
-                System.out.println("Invalid subnet mask format.");
-                result = false;
+            throw new IllegalArgumentException();
+        }
+        return counterOfZeros;
+    }
+
+    public static int calculatingAmountOfHosts(String binarySubnetMask) {
+        int hostBits = countingZerosOfSubnetMask(binarySubnetMask);
+        return (int)Math.pow(2, hostBits)-2;
+    }
+
+    public static String calculatingBroadcastBinary(String binarySubnetMask, String binaryNetID) {
+        String broadcast;
+        String onesToReplaceHostSection = "";
+        int counterOfZeros = countingZerosOfSubnetMask(binarySubnetMask);
+        for (int i = 1; i <= counterOfZeros; i++) {
+            onesToReplaceHostSection += "1";
+        }
+        String substringBinaryNetIDMinusCounter;
+        substringBinaryNetIDMinusCounter = binaryNetID.substring(0, binaryNetID.length() - counterOfZeros);
+        broadcast = substringBinaryNetIDMinusCounter + onesToReplaceHostSection;
+        return broadcast;
+    }
+
+    public static String calculatingBinaryNetID(String ip, String subNetMask) {
+        StringBuilder netId = new StringBuilder();
+        for (int i = 0; i < 32; i++) {
+            if (ip.charAt(i) == subNetMask.charAt(i) && subNetMask.charAt(i) == '1') {
+                netId.append("1");
+            } else {
+                netId.append("0");
             }
         }
-        return result;
+        return netId.toString();
     }
+
 }
-
-
-
